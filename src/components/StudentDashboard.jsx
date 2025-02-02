@@ -14,19 +14,16 @@ const StudentDashboard = () => {
   useEffect(() => {
     fetchHistory();
 
-    // Initialize Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognitionInstance = new SpeechRecognition();
       recognitionInstance.continuous = false;
       recognitionInstance.interimResults = false;
       recognitionInstance.lang = "en-US";
-
       recognitionInstance.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         setPrompt((prevPrompt) => prevPrompt + " " + transcript);
       };
-
       recognitionInstance.onend = () => setIsListening(false);
       setRecognition(recognitionInstance);
     }
@@ -40,14 +37,10 @@ const StudentDashboard = () => {
       const res = await fetch("http://localhost:5001/api/prompt/history", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      console.log("📢 Fetching history, status:", res.status);
       if (!res.ok) throw new Error("Failed to load history.");
-
       const data = await res.json();
       setHistory(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("❌ Error fetching history:", error);
       setHistory([]);
     }
   };
@@ -56,23 +49,14 @@ const StudentDashboard = () => {
     if (recognition) {
       setIsListening(true);
       recognition.start();
-    } else {
-      alert("Your browser does not support voice recognition.");
     }
   };
 
-  const handleFileUpload = (e) => {
-    setFile(e.target.files[0]);
-  };
+  const handleFileUpload = (e) => setFile(e.target.files[0]);
 
   const handleSubmit = async () => {
-    if (!prompt && !file) {
-      alert("Please provide a prompt or upload a file.");
-      return;
-    }
-
+    if (!prompt && !file) return;
     setIsLoading(true);
-    setError(null);
 
     try {
       const token = localStorage.getItem("token");
@@ -87,13 +71,7 @@ const StudentDashboard = () => {
           },
           body: JSON.stringify({ prompt, agentType: "professor_ai" }),
         });
-
-        console.log("🚀 API Response Status:", response.status);
-        if (!response.ok) {
-          const errorMessage = await response.text();
-          throw new Error(errorMessage || "Failed to process AI prompt.");
-        }
-
+        if (!response.ok) throw new Error();
         const result = await response.json();
         setResponse(result.response);
         fetchHistory();
@@ -102,80 +80,60 @@ const StudentDashboard = () => {
       if (file) {
         const formData = new FormData();
         formData.append("file", file);
-
         const fileUploadResponse = await fetch("http://localhost:5001/api/upload", {
           method: "POST",
           body: formData,
         });
-
-        if (!fileUploadResponse.ok) {
-          const errorMessage = await fileUploadResponse.text();
-          throw new Error(errorMessage || "Failed to upload file.");
-        }
-
-        alert("File uploaded successfully!");
+        if (!fileUploadResponse.ok) throw new Error();
       }
-    } catch (error) {
-      console.error("❌ Submission error:", error.message);
-      alert(`Error: ${error.message}`);
-    } finally {
+    } catch (error) {} finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-blue-900 text-white flex flex-col">
-      <DashboardNavbar /> {/* ✅ Navbar included */}
-      
-      <div className="flex flex-col items-center p-6 pt-20">
-        <h1 className="text-4xl font-extrabold my-4">Student Dashboard</h1>
-
-        {/* Error Message */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-500 text-white flex flex-col">
+      <DashboardNavbar />
+      <div className="flex flex-col items-center p-6 pt-20 w-full max-w-3xl mx-auto">
+        <h1 className="text-4xl font-bold mb-6">Student Dashboard</h1>
         {error && <p className="bg-red-500 text-white p-2 rounded mb-4">{error}</p>}
-
-        {/* Prompt Input */}
         <textarea
-          className="w-full max-w-2xl bg-gray-800 border border-gray-700 p-4 rounded-lg text-white placeholder-gray-400 mb-4"
+          className="w-full bg-white border border-gray-300 p-4 rounded-lg text-gray-900 placeholder-gray-500 mb-4 shadow-md focus:ring-2 focus:ring-blue-400"
           placeholder="Enter your study question or topic..."
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
         />
-
-        {/* Voice Command Button */}
-        <button
-          onClick={handleVoiceCommand}
-          className={`px-6 py-3 text-lg font-semibold rounded-lg transition duration-300 shadow-md ${
-            isListening ? "bg-red-500" : "bg-blue-500 hover:bg-blue-600"
-          }`}
-        >
-          {isListening ? "Listening..." : "Use Voice Command 🎤"}
-        </button>
-
-        {/* File Upload */}
-        <input type="file" onChange={handleFileUpload} className="mb-4 text-white mt-4" />
-
-        {/* Submit Button */}
-        <button
-          onClick={handleSubmit}
-          className={`px-6 py-3 text-lg font-semibold rounded-lg transition duration-300 shadow-md ${
-            isLoading ? "bg-gray-500 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
-          }`}
-          disabled={isLoading}
-        >
-          {isLoading ? "Submitting..." : "Submit"}
-        </button>
-
-        {/* AI Response Display */}
+        <div className="flex space-x-4 justify-center w-full">
+          <button
+            onClick={handleVoiceCommand}
+            className={`px-6 py-3 text-lg font-semibold rounded-lg transition shadow-md ${
+              isListening ? "bg-red-500" : "bg-blue-500 hover:bg-blue-600"
+            }`}
+          >
+            {isListening ? "Listening..." : "Use Voice Command 🎤"}
+          </button>
+          <label className="px-6 py-3 text-lg font-semibold rounded-lg transition shadow-md bg-blue-500 hover:bg-blue-600 cursor-pointer">
+            Upload File
+            <input type="file" onChange={handleFileUpload} className="hidden" />
+          </label>
+          <button
+            onClick={handleSubmit}
+            className={`px-6 py-3 text-lg font-semibold rounded-lg transition shadow-md ${
+              isLoading ? "bg-gray-500 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
+            }`}
+            disabled={isLoading}
+          >
+            {isLoading ? "Submitting..." : "Submit"}
+          </button>
+        </div>
         {response && (
-          <div className="mt-6 p-6 w-full max-w-2xl bg-gray-800 rounded-lg border border-gray-700">
-            <h2 className="text-xl font-semibold text-cyan-400">Professor AI Response:</h2>
-            <p className="text-gray-300 mt-2">{response}</p>
+          <div className="mt-6 p-6 w-full bg-white rounded-lg border border-gray-300 text-gray-900 shadow-md">
+            <h2 className="text-xl font-semibold text-blue-600">Professor AI Response:</h2>
+            <p className="text-gray-700 mt-2">{response}</p>
           </div>
         )}
-
-        {/* History Section */}
-        <div className="mt-6 w-full max-w-2xl">
-          <h2 className="text-xl font-semibold text-cyan-400">History</h2>
+        <div className="mt-6 w-full max-w-3xl">
+          <h2 className="text-xl font-semibold text-blue-600">History</h2>
           <ul className="mt-2 text-gray-300">
             {history.length > 0 ? (
               history.map((item, index) => (
