@@ -16,17 +16,22 @@ const SignUpPage = () => {
   const [clinicName, setClinicName] = useState("");
   const [university, setUniversity] = useState("");
   const [graduationYear, setGraduationYear] = useState("");
+  const [countryCode, setCountryCode] = useState(""); // Add this line
+  const [country, setCountry] = useState(""); // Add this line
 
   const navigate = useNavigate();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
 
-    if (!firstName || !lastName || !email || !phoneNumber || !password || !role || !practiceType) {
+    if (!firstName || !lastName || !email || !phoneNumber || !password || !role || !practiceType || !countryCode || !country) {
       alert("Please fill in all required fields");
       return;
     }
-
+    if (phoneNumber.length !== 10) {
+      alert("Phone number must be 10 digits");
+      return;
+    }
     if (role === "doctor" && (!licenseNumber || !experience)) {
       alert("Doctors must provide License Number and Years of Experience");
       return;
@@ -46,7 +51,9 @@ const SignUpPage = () => {
       firstName,
       lastName,
       email,
+      countryCode,
       phoneNumber,
+      country,
       password,
       role,
       practiceType,
@@ -97,6 +104,15 @@ const SignUpPage = () => {
             <label className="block mb-2 font-semibold">Phone Number</label>
             <input type="tel" className="w-full border px-3 py-2 rounded-lg" required value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
           </div>
+          <div className="mb-4">
+            <label className="block mb-2 font-semibold">Country Code</label>
+            <input type="text" className="w-full border px-3 py-2 rounded-lg" required value={countryCode} onChange={(e) => setCountryCode(e.target.value)} />
+          </div>
+          <div className="mb-4">
+            <label className="block mb-2 font-semibold">Country</label>
+            <input type="text" className="w-full border px-3 py-2 rounded-lg" required value={country} onChange={(e) => setCountry(e.target.value)} />
+          </div> 
+          
           <div className="mb-4">
             <label className="block mb-2 font-semibold">Password</label>
             <input type="password" className="w-full border px-3 py-2 rounded-lg" required value={password} onChange={(e) => setPassword(e.target.value)} />

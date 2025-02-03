@@ -9,10 +9,15 @@ const DoctorDashboard = () => {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState(null);
   const [history, setHistory] = useState([]);
+  const [firstName, setFirstName] = useState("");
 
   useEffect(() => {
     fetchHistory();
 
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user && user.firstName) {
+      setFirstName(user.firstName);
+    }
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognitionInstance = new SpeechRecognition();
@@ -95,6 +100,9 @@ const DoctorDashboard = () => {
       <DashboardNavbar />
       <div className="flex flex-col items-center p-6 pt-20 w-full max-w-3xl mx-auto">
         <h1 className="text-4xl font-bold mb-6">Doctor Dashboard</h1>
+        {/* Welcome Message */}
+        <h2 className="text-2xl font-semibold mb-4">Welcome, {firstName}!</h2>
+
         <textarea
           className="w-full bg-white border border-gray-300 p-4 rounded-lg text-gray-900 placeholder-gray-500 mb-4 shadow-md focus:ring-2 focus:ring-indigo-400"
           placeholder="Enter your question or command..."
